@@ -1,39 +1,41 @@
-import { useContext } from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native'
 
-import { CityContext } from './CityContext';
-import { Container, DefaultInput, Suggestion, ContainerSuggestion } from './styledComponents';
+import { useCityContext } from '../provider/CityContext'
+import {
+  Container,
+  DefaultInput,
+  Suggestion,
+  ContainerSuggestions
+} from './styledComponents'
 
 export default function SearchBar({ filteredCities, onChangeText, navigation }) {
-	const { setSelectedCity } = useContext(CityContext);
+  const { setSelectedCity, setSelectedCityLocation } = useCityContext()
 
-	return (
-		<Container>
-			<DefaultInput
-				onChangeText={onChangeText}
-				placeholder="Rechercher une ville"
-			/>
-			{filteredCities.length > 2 && (
-				<ContainerSuggestion>
-					{filteredCities.map((item, index) => (
-						<TouchableOpacity
-							key={index}
-							onPress={() => {
-								setSelectedCity(item)
-								navigation.navigate('Météo', {
-									city: item.properties.city,
-									coordinates: {
-										latitude: item.geometry.coordinates[0],
-										longitude: item.geometry.coordinates[1]
-									},
-								});
-							}}
-						>
-							<Suggestion>{item.properties.city}</Suggestion>
-						</TouchableOpacity>
-					))}
-					</ContainerSuggestion>
-			)}
-		</Container>
-	);
+  return (
+    <Container>
+      <DefaultInput
+        onChangeText={onChangeText}
+        placeholder="Rechercher une ville"
+      />
+      {filteredCities.length > 2 && (
+        <ContainerSuggestions>
+          {filteredCities.map((item, id) => (
+            <TouchableOpacity
+              key={id}
+              onPress={() => {
+                setSelectedCity(item)
+                setSelectedCityLocation({
+                  latitude: item.geometry.coordinates[1],
+                  longitude: item.geometry.coordinates[0]
+                })
+                navigation.navigate('Météo')
+              }}
+            >
+              <Suggestion>{item.properties.city}</Suggestion>
+            </TouchableOpacity>
+          ))}
+        </ContainerSuggestions>
+      )}
+    </Container>
+  )
 }

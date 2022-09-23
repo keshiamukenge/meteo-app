@@ -1,75 +1,79 @@
-import { useState, useEffect } from 'react';
-import { View, Text } from "react-native";
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { View, Text } from 'react-native'
 
-import { getCityTemperaturesApi } from '../services/cities.services';
+import Navigation from '../components/Navigation'
+import { useCityContext } from '../provider/CityContext'
+import { getCityTemperaturesApi } from '../services/cities.services'
 import {
-	WeatherCard,
-	ContainerWeatherCards,
-	WeatherCardTemperature,
-	CityTitle,
-	Icon,
-	WeatherCardContent,
-	WeatherCardContentInfos
-} from './styledComponents';
+  WeatherCard,
+  ContainerWeatherCards,
+  WeatherCardTemperature,
+  CityTitle,
+  Icon,
+  WeatherCardContent,
+  WeatherCardContentInfos
+} from './styledComponents'
 
-const dayjs = require('dayjs');
+const dayjs = require('dayjs')
 
-export default function Weather({ route }) {
-	const { city, coordinates } = route.params;
-	const [cityTemperatures, setCityTemperatures] = useState(null);
-	const [cityDates, setCityDates] = useState(null);
-	const weatherIcons = {
-		sun: require('../../assets/weather-icons/sun.png'),
-		cloudy: require('../../assets/weather-icons/cloudy.png'),
-		rain: require('../../assets/weather-icons/rain.png'),
-	}
+export default function Weather() {
+  const { selectedCityLocation, selectedCity } = useCityContext()
+  const [cityTemperatures, setCityTemperatures] = useState(null)
+  const [cityDates, setCityDates] = useState(null)
 
-	const getWeatherIcon = ({ temperature }) => {
-		if(temperature > 26) {
-			return weatherIcons.sun;
-		} else if(temperature < 24) {
-			return weatherIcons.rain;
-		} else {
-			return weatherIcons.cloudy;
-		}
-	}
+  const getCityTemperatures = useCallback(async () => {
+    const result = await getCityTemperaturesApi({
+      coordinates: selectedCityLocation
+    })
 
-	async function getCityTemperatures() {
-		const result = await getCityTemperaturesApi({
-			latitude: coordinates.latitude,
-			longitude: coordinates.longitude,
-		 })
+    try {
+      setCityTemperatures(result.data.hourly.temperature_2m)
+      setCityDates(result.data.hourly.time)
+    } catch (error) {
+      console.log(error)
+    }
+  }, [selectedCityLocation])
 
-		try {
-			setCityTemperatures(result.data.hourly.temperature_2m)
-			setCityDates(result.data.hourly.time)
-			console.log(cityTemperatures, cityDates)
-		} catch (error) {
-			console.log(error)
-		}
-	}
+  const weatherIcons = useMemo(() => {
+    return {
+      sun: require('../../assets/weather-icons/sun.png'),
+      cloudy: require('../../assets/weather-icons/cloudy.png'),
+      rain: require('../../assets/weather-icons/rain.png'),
+    }
+  }, [])
 
-	useEffect(() => {
-		getCityTemperatures()
-	}, [city])
+  const getWeatherIcon = ({ temperature }) => {
+    if(temperature > 17) {
+      return weatherIcons.sun
+    } else if(temperature < 11) {
+      return weatherIcons.rain
+    } else {
+      return weatherIcons.cloudy
+    }
+  }
 
-	return(
-		<View>
-			<CityTitle>{city}</CityTitle>
-			<ContainerWeatherCards>
-			{cityTemperatures && cityDates && cityTemperatures.map((temperature, id) => (
-				<WeatherCard key={id}>
-					<WeatherCardContent>
-						<WeatherCardContentInfos>
-							<WeatherCardTemperature>{temperature}°C</WeatherCardTemperature>
-							<Text>{dayjs(cityDates[id]).format('H A')}</Text>
-							<Text>{dayjs(cityDates[id]).format('DD MMMM')}</Text>
-						</WeatherCardContentInfos>
-						<Icon source={getWeatherIcon({ temperature })}/>
-					</WeatherCardContent>
-				</WeatherCard>
-			))}
-			</ContainerWeatherCards>
-		</View>
-	)
+  useEffect(() => {
+    getCityTemperatures()
+  }, [selectedCity])
+
+  return(
+    <View>
+      <CityTitle>{selectedCity.properties.city}</CityTitle>
+      <ContainerWeatherCards>
+        {cityTemperatures && cityDates && cityTemperatures.map((temperature, id) => (
+          <WeatherCard key={id}>
+            <WeatherCardContent>
+              <WeatherCardContentInfos>
+                <WeatherCardTemperature>{temperature}°C</WeatherCardTemperature>
+                <Text>{dayjs(cityDates[id]).format('H A')}</Text>
+                <Text>{dayjs(cityDates[id]).format('DD MMMM')}</Text>
+              </WeatherCardContentInfos>
+              <Icon source={getWeatherIcon({ temperature })}/>
+            </WeatherCardContent>
+          </WeatherCard>
+        ))}
+      </ContainerWeatherCards>
+      <Navigation />
+    </View>
+  )
 }

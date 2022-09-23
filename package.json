@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "eslint --ext \".js,.vue\" --ignore-path .gitignore ."
   },
   "dependencies": {
     "@react-navigation/bottom-tabs": "^6.3.3",
@@ -29,7 +30,9 @@
     "styled-components": "^5.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "eslint": "^8.23.1",
+    "eslint-plugin-react": "^7.31.8"
   },
   "private": true
 }
